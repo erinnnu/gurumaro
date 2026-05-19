@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '../store'
 import { Mascot } from '../components/Mascot'
 import { RestaurantRow } from '../components/RestaurantRow'
@@ -6,6 +6,12 @@ import { RestaurantRow } from '../components/RestaurantRow'
 export function ScreenMatchB() {
   const { matchResult, sessionId } = useStore()
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    if (sessionId && !window.location.search.includes('view=match')) {
+      window.history.replaceState(null, '', `/?session=${sessionId}&view=match`)
+    }
+  }, [])
 
   if (!matchResult) return null
 

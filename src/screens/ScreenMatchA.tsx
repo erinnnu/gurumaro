@@ -8,7 +8,13 @@ export function ScreenMatchA() {
   const { matchResult, sessionId } = useStore()
   const [copied, setCopied] = useState(false)
 
-  useEffect(() => { playMatch() }, [])
+  useEffect(() => {
+    playMatch()
+    // SafariやURLシェア時に正しいURLで開けるよう更新
+    if (sessionId && !window.location.search.includes('view=match')) {
+      window.history.replaceState(null, '', `/?session=${sessionId}&view=match`)
+    }
+  }, [])
 
   if (!matchResult) return null
 
