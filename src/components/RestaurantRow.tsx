@@ -98,11 +98,11 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
           <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 800, fontSize: 14, color: 'var(--brown)', lineHeight: 1.3, marginBottom: 5 }}>
             {restaurant.name}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 4 }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--orange-deep)', background: '#FFE3D1', padding: '2px 6px', borderRadius: 99 }}>{restaurant.genre}</span>
             <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brown-soft)', background: '#F2EBDE', padding: '2px 6px', borderRadius: 99 }}>{restaurant.area}</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brown-soft)', background: '#F2EBDE', padding: '2px 6px', borderRadius: 99 }}>{restaurant.budget}</span>
           </div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--brown-soft)' }}>{restaurant.budget}</div>
         </div>
         <span style={{ fontSize: 14, color: 'var(--brown-mute)', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>⌄</span>
       </button>
