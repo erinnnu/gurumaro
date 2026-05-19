@@ -16,20 +16,27 @@ export function ScreenMatchB() {
     : window.location.href
 
   const handleShare = async () => {
+    let success = false
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: 'ぐるまろ！結果',
-          text: 'ぐるまろ！の結果を見てね！',
-          url: matchListUrl,
-        })
-      } else {
-        await navigator.clipboard.writeText(matchListUrl)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-      }
+      await navigator.clipboard.writeText(matchListUrl)
+      success = true
     } catch {
-      // ignore
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: 'ぐるまろ！結果',
+            text: 'ぐるまろ！の結果を見てね！',
+            url: matchListUrl,
+          })
+          success = true
+        }
+      } catch { /* cancelled or unsupported */ }
+    }
+    if (!success) {
+      prompt('このURLをコピーして送ってね', matchListUrl)
+    } else {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
     }
   }
 
@@ -90,6 +97,8 @@ export function ScreenMatchB() {
       <div style={{ padding: '4px 20px 8px', textAlign: 'center', fontSize: 9, color: 'var(--brown-mute)', flexShrink: 0 }}>
         Powered by <a href="https://webservice.recruit.co.jp/" style={{ color: 'inherit' }}>ホットペッパーグルメ Webサービス</a>
       </div>
+
+      {copied && <div className="toast">✓ リンクをコピーしたまろ！</div>}
     </div>
   )
 }

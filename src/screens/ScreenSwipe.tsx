@@ -65,7 +65,7 @@ function SwipeCard({
     >
       <div className="card" style={{ overflow: 'hidden' }}>
         {/* Photo */}
-        <div style={{ height: 'clamp(280px, 48vh, 380px)', position: 'relative', overflow: 'hidden', background: '#F2EBDE', flexShrink: 0 }}>
+        <div style={{ height: 'clamp(160px, 32vh, 220px)', position: 'relative', overflow: 'hidden', background: '#F2EBDE', flexShrink: 0 }}>
           {restaurant.photo ? (
             <img
               src={restaurant.photo}

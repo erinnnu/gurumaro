@@ -277,9 +277,10 @@ export const useStore = create<AppState>((set, get) => ({
     if (!state.sessionId) return
     const userToken = getUserToken()
     try {
-      const [sessionRes, swipesRes] = await Promise.all([
+      const [sessionRes, swipesRes, completionRes] = await Promise.all([
         supabase.from('sessions').select('restaurants').eq('id', state.sessionId).single(),
         supabase.from('swipes').select('restaurant_id, choice').eq('session_id', state.sessionId).eq('user_token', userToken),
+        supabase.from('session_completion').select('user_token').eq('session_id', state.sessionId),
       ])
       if (!sessionRes.data) throw new Error('セッションが見つかりませんでした')
       const restaurants = sessionRes.data.restaurants as Restaurant[]
@@ -287,7 +288,14 @@ export const useStore = create<AppState>((set, get) => ({
         restaurantId: s.restaurant_id,
         choice: s.choice as 'yes' | 'no',
       }))
-      set({ restaurants, swipes, step: 'result' })
+      set({ restaurants, swipes })
+      // 両者が完了済みならマッチ結果を表示
+      if (completionRes.data && completionRes.data.length >= 2) {
+        set({ partnerDone: true })
+        await get().computeMatch()
+      } else {
+        set({ step: 'result' })
+      }
     } catch {
       set({ step: 'error', errorMessage: 'データの読み込みに失敗しました' })
     }
