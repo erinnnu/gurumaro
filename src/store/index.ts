@@ -20,6 +20,7 @@ interface AppState {
   setProfile: (p: Partial<Profile>) => void
   setRestaurants: (r: Restaurant[]) => void
   addSwipe: (s: SwipeChoice) => void
+  clearSwipes: () => void
   setToast: (msg: string | null) => void
 
   // Actions
@@ -60,6 +61,7 @@ export const useStore = create<AppState>((set, get) => ({
   setProfile: (p) => set((s) => ({ profile: { ...s.profile, ...p } })),
   setRestaurants: (r) => set({ restaurants: r }),
   addSwipe: (s) => set((state) => ({ swipes: [...state.swipes, s] })),
+  clearSwipes: () => set({ swipes: [] }),
   setToast: (toast) => set({ toast }),
 
   // URL初期化：セッションIDを検出し、同一ユーザーか新規ユーザーかを判定

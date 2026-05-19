@@ -114,7 +114,7 @@ function SwipeCard({
 }
 
 export function ScreenSwipe() {
-  const { restaurants, addSwipe, setStep, swipes, saveSessionAndShare } = useStore()
+  const { restaurants, addSwipe, clearSwipes, setStep, swipes, saveSessionAndShare } = useStore()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [mascotReaction, setMascotReaction] = useState<'like' | 'nope' | null>(null)
   const [showMatchC, setShowMatchC] = useState(false)
@@ -156,7 +156,7 @@ export function ScreenSwipe() {
             {currentIndex}枚スワイプしたけど、YESが少なめまろ。<br />続けるか、結果を見るか選んでね。
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
-            <button className="btn-primary" onClick={() => { setShowMatchC(false); setCurrentIndex(0) }}>もう少し続ける</button>
+            <button className="btn-primary" onClick={() => { clearSwipes(); setShowMatchC(false); setCurrentIndex(0) }}>もう少し続ける</button>
             <button className="btn-secondary" onClick={handleFinish}>気になったお店だけ見る</button>
           </div>
         </div>
