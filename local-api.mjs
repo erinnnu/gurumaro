@@ -84,13 +84,13 @@ const server = http.createServer(async (req, res) => {
       const isLunch = mealtime === 'ランチ'
 
       // 段階的に条件を緩めながら検索（厳しすぎるフィルタで0件にならないよう）
-      const buildParams = ({ withBudget, withLunch }) => new URLSearchParams({
+      const buildParams = ({ withBudget, withLunch, withKeyword = true, withGenre = true }) => new URLSearchParams({
         key: API_KEY,
         format: 'json',
         count: '15',
         large_area: largeArea,
-        ...(genreParam ? { genre: genreParam } : {}),
-        ...(keywords.length ? { keyword: keywords.join(' ') } : {}),
+        ...(withGenre && genreParam ? { genre: genreParam } : {}),
+        ...(withKeyword && keywords.length ? { keyword: keywords.join(' ') } : {}),
         ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
         ...(withLunch && isLunch ? { lunch: '1' } : {}),
       })
@@ -103,20 +103,28 @@ const server = http.createServer(async (req, res) => {
         return d?.results?.shop ?? []
       }
 
-      // 1st: 全条件
+      // 段階的に条件を緩めながら最低8件を目指す
       let shops = await tryFetch(buildParams({ withBudget: true, withLunch: true }))
       console.log(`[API] Full filter: ${shops.length} shops`)
 
-      // 2nd: budget を外す
-      if (shops.length === 0 && budgetCode) {
+      if (shops.length < 8 && budgetCode) {
         shops = await tryFetch(buildParams({ withBudget: false, withLunch: true }))
         console.log(`[API] Without budget: ${shops.length} shops`)
       }
 
-      // 3rd: lunch も外す
-      if (shops.length === 0 && isLunch) {
+      if (shops.length < 8 && isLunch) {
         shops = await tryFetch(buildParams({ withBudget: false, withLunch: false }))
         console.log(`[API] Without lunch filter: ${shops.length} shops`)
+      }
+
+      if (shops.length < 8 && keywords.length) {
+        shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: false }))
+        console.log(`[API] Without keyword: ${shops.length} shops`)
+      }
+
+      if (shops.length < 8 && genreParam) {
+        shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: false, withGenre: false }))
+        console.log(`[API] Without genre: ${shops.length} shops`)
       }
 
       const restaurants = shops.map(shop => ({
@@ -125,7 +133,8 @@ const server = http.createServer(async (req, res) => {
         genre: shop.genre?.name ?? '',
         area: shop.small_area?.name ?? shop.middle_area?.name ?? '',
         budget: shop.budget?.average ? `¥${shop.budget.average}` : '要確認',
-        desc: shop.catch ?? shop.access ?? '',
+        desc: shop.catch ?? '',
+        access: shop.access ?? '',
         photo: shop.photo?.mobile?.l ?? shop.photo?.pc?.l ?? '',
         url: shop.urls?.pc ?? '',
       }))

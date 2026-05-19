@@ -65,7 +65,7 @@ function SwipeCard({
     >
       <div className="card" style={{ overflow: 'hidden' }}>
         {/* Photo */}
-        <div style={{ height: 'clamp(220px, 38vw, 420px)', position: 'relative', overflow: 'hidden', background: '#F2EBDE' }}>
+        <div style={{ height: 'clamp(140px, 28vh, 190px)', position: 'relative', overflow: 'hidden', background: '#F2EBDE', flexShrink: 0 }}>
           {restaurant.photo ? (
             <img
               src={restaurant.photo}
@@ -76,26 +76,33 @@ function SwipeCard({
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
             />
           ) : (
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60 }}>🍽</div>
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48 }}>🍽</div>
           )}
           {isYes && (
-            <div style={{ position: 'absolute', top: 18, left: 16, border: '3px solid #FF6B9A', color: '#FF6B9A', background: 'rgba(255,255,255,0.95)', fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 900, fontSize: 22, padding: '4px 12px', borderRadius: 8, transform: 'rotate(-12deg)', opacity: stampOpacity }}>YES ❤</div>
+            <div style={{ position: 'absolute', top: 12, left: 12, border: '3px solid #FF6B9A', color: '#FF6B9A', background: 'rgba(255,255,255,0.95)', fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 900, fontSize: 20, padding: '3px 10px', borderRadius: 8, transform: 'rotate(-12deg)', opacity: stampOpacity }}>YES ❤</div>
           )}
           {isNo && (
-            <div style={{ position: 'absolute', top: 18, right: 16, border: '3px solid #7B8AA0', color: '#7B8AA0', background: 'rgba(255,255,255,0.95)', fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 900, fontSize: 22, padding: '4px 12px', borderRadius: 8, transform: 'rotate(14deg)', opacity: stampOpacity }}>NOPE</div>
+            <div style={{ position: 'absolute', top: 12, right: 12, border: '3px solid #7B8AA0', color: '#7B8AA0', background: 'rgba(255,255,255,0.95)', fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 900, fontSize: 20, padding: '3px 10px', borderRadius: 8, transform: 'rotate(14deg)', opacity: stampOpacity }}>NOPE</div>
           )}
         </div>
         {/* Body */}
-        <div style={{ padding: '14px 16px 16px' }}>
-          <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 800, fontSize: 'clamp(16px, 1.6vw, 22px)', color: 'var(--brown)', lineHeight: 1.2, marginBottom: 6 }}>
+        <div style={{ padding: '10px 14px 12px' }}>
+          <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 800, fontSize: 16, color: 'var(--brown)', lineHeight: 1.2, marginBottom: 6 }}>
             {restaurant.name}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--orange-deep)', background: '#FFE3D1', padding: '3px 8px', borderRadius: 99 }}>{restaurant.genre}</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brown-soft)', background: '#F2EBDE', padding: '3px 8px', borderRadius: 99 }}>{restaurant.area}</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brown-soft)', background: '#F2EBDE', padding: '3px 8px', borderRadius: 99 }}>{restaurant.budget}</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--orange-deep)', background: '#FFE3D1', padding: '2px 7px', borderRadius: 99 }}>{restaurant.genre}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brown-soft)', background: '#F2EBDE', padding: '2px 7px', borderRadius: 99 }}>{restaurant.area}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brown-soft)', background: '#F2EBDE', padding: '2px 7px', borderRadius: 99 }}>{restaurant.budget}</span>
           </div>
-          <div style={{ fontSize: 13, color: 'var(--brown-soft)', lineHeight: 1.55, fontWeight: 500 }}>{restaurant.desc}</div>
+          {restaurant.access && (
+            <div style={{ fontSize: 11, color: 'var(--brown-mute)', fontWeight: 600, marginBottom: 4 }}>
+              🚶 {restaurant.access}
+            </div>
+          )}
+          {restaurant.desc && (
+            <div style={{ fontSize: 12, color: 'var(--brown-soft)', lineHeight: 1.45, fontWeight: 500, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{restaurant.desc}</div>
+          )}
         </div>
       </div>
     </div>

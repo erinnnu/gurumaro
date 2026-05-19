@@ -80,13 +80,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const budgetCode = (budgets as string[]).length ? (BUDGET_TO_CODE[(budgets as string[])[0]] ?? '') : ''
   const isLunch = mealtime === 'ランチ'
 
-  const buildParams = (withBudget: boolean, withLunch: boolean) => new URLSearchParams({
+  const buildParams = (withBudget: boolean, withLunch: boolean, withKeyword: boolean, withGenre: boolean) => new URLSearchParams({
     key: API_KEY,
     format: 'json',
     count: '15',
     large_area: largeArea,
-    ...(genreParam ? { genre: genreParam } : {}),
-    ...(keywords.length ? { keyword: keywords.join(' ') } : {}),
+    ...(withGenre && genreParam ? { genre: genreParam } : {}),
+    ...(withKeyword && keywords.length ? { keyword: keywords.join(' ') } : {}),
     ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
     ...(withLunch && isLunch ? { lunch: '1' } : {}),
   })
@@ -99,13 +99,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // 段階的に条件を緩めながら検索
-    let shops = await tryFetch(buildParams(true, true))
-    if (shops.length === 0 && budgetCode) {
-      shops = await tryFetch(buildParams(false, true))
+    // 段階的に条件を緩めながら最低8件を目指す
+    let shops = await tryFetch(buildParams(true, true, true, true))
+    if (shops.length < 8 && budgetCode) {
+      shops = await tryFetch(buildParams(false, true, true, true))
     }
-    if (shops.length === 0 && isLunch) {
-      shops = await tryFetch(buildParams(false, false))
+    if (shops.length < 8 && isLunch) {
+      shops = await tryFetch(buildParams(false, false, true, true))
+    }
+    if (shops.length < 8 && keywords.length) {
+      shops = await tryFetch(buildParams(false, false, false, true))
+    }
+    if (shops.length < 8 && genreParam) {
+      shops = await tryFetch(buildParams(false, false, false, false))
     }
 
     const restaurants = shops.map((shop: Record<string, unknown>) => {
@@ -122,7 +128,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         genre: genre?.name ?? '',
         area: smallArea?.name ?? middleArea?.name ?? '',
         budget: budget?.average ? `¥${budget.average}` : '要確認',
-        desc: (shop.catch as string) ?? (shop.access as string) ?? '',
+        desc: (shop.catch as string) ?? '',
+        access: (shop.access as string) ?? '',
         photo: photo?.mobile?.l ?? photo?.pc?.l ?? '',
         url: urls?.pc ?? `https://restaurant.hotpepper.jp/strJ${(shop.id as string).replace(/^J/, '')}/`,
       }

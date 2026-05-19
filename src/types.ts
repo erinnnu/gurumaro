@@ -22,6 +22,7 @@ export interface Restaurant {
   area: string
   budget: string
   desc: string
+  access: string
   photo: string
   url: string
 }
