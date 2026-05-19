@@ -83,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const buildParams = (withBudget: boolean, withLunch: boolean, withKeyword: boolean, withGenre: boolean) => new URLSearchParams({
     key: API_KEY,
     format: 'json',
-    count: '15',
+    count: '8',
     large_area: largeArea,
     ...(withGenre && genreParam ? { genre: genreParam } : {}),
     ...(withKeyword && keywords.length ? { keyword: keywords.join(' ') } : {}),

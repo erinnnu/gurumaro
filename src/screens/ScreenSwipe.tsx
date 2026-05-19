@@ -65,7 +65,7 @@ function SwipeCard({
     >
       <div className="card" style={{ overflow: 'hidden' }}>
         {/* Photo */}
-        <div style={{ height: 'clamp(140px, 28vh, 190px)', position: 'relative', overflow: 'hidden', background: '#F2EBDE', flexShrink: 0 }}>
+        <div style={{ height: 'clamp(200px, 38vh, 280px)', position: 'relative', overflow: 'hidden', background: '#F2EBDE', flexShrink: 0 }}>
           {restaurant.photo ? (
             <img
               src={restaurant.photo}
@@ -86,24 +86,28 @@ function SwipeCard({
           )}
         </div>
         {/* Body */}
-        <div style={{ padding: '10px 14px 12px' }}>
-          <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 800, fontSize: 16, color: 'var(--brown)', lineHeight: 1.2, marginBottom: 6 }}>
+        <div style={{ padding: '10px 14px 0' }}>
+          <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 800, fontSize: 15, color: 'var(--brown)', lineHeight: 1.2, marginBottom: 6 }}>
             {restaurant.name}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 5 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--orange-deep)', background: '#FFE3D1', padding: '2px 7px', borderRadius: 99 }}>{restaurant.genre}</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brown-soft)', background: '#F2EBDE', padding: '2px 7px', borderRadius: 99 }}>{restaurant.area}</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--brown-soft)', background: '#F2EBDE', padding: '2px 7px', borderRadius: 99 }}>{restaurant.budget}</span>
           </div>
           {restaurant.access && (
-            <div style={{ fontSize: 11, color: 'var(--brown-mute)', fontWeight: 600, marginBottom: 4 }}>
+            <div style={{ fontSize: 11, color: 'var(--brown-mute)', fontWeight: 600, marginBottom: 6 }}>
               🚶 {restaurant.access}
             </div>
           )}
-          {restaurant.desc && (
-            <div style={{ fontSize: 12, color: 'var(--brown-soft)', lineHeight: 1.45, fontWeight: 500, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{restaurant.desc}</div>
-          )}
         </div>
+        {/* おすすめポイント */}
+        {restaurant.desc && (
+          <div style={{ margin: '0 14px 12px', background: '#FFF4EC', borderRadius: 10, padding: '7px 10px', borderLeft: '3px solid var(--orange)' }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--orange)', marginBottom: 2, letterSpacing: '0.03em' }}>✨ おすすめポイント</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--brown)', lineHeight: 1.45 }}>{restaurant.desc}</div>
+          </div>
+        )}
       </div>
     </div>
   )

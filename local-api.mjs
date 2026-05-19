@@ -87,7 +87,7 @@ const server = http.createServer(async (req, res) => {
       const buildParams = ({ withBudget, withLunch, withKeyword = true, withGenre = true }) => new URLSearchParams({
         key: API_KEY,
         format: 'json',
-        count: '15',
+        count: '8',
         large_area: largeArea,
         ...(withGenre && genreParam ? { genre: genreParam } : {}),
         ...(withKeyword && keywords.length ? { keyword: keywords.join(' ') } : {}),
