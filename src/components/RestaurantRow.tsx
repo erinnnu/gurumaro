@@ -20,7 +20,7 @@ const BOOKING_SERVICES = [
     label: '一休で予約する',
     color: '#0F3D6E',
     pixel: VC_PIXELS.ikyu,
-    comingSoon: false,
+    comingSoon: true,
   },
   {
     label: 'ホットペッパーグルメで予約する',
