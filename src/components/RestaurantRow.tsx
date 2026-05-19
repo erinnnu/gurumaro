@@ -65,6 +65,7 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
         </div>
       )}
 
+      {/* Photo + name header row */}
       <button
         onClick={() => setExpanded(!expanded)}
         style={{
@@ -80,70 +81,46 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
           textAlign: 'left',
         }}
       >
-        <div style={{ width: 64, height: 64, flexShrink: 0, borderRadius: 12, overflow: 'hidden', background: '#F2EBDE' }}>
+        <div style={{ width: 72, height: 72, flexShrink: 0, borderRadius: 12, overflow: 'hidden', background: '#F2EBDE' }}>
           {restaurant.photo ? (
             <img
               src={restaurant.photo}
               alt={restaurant.name}
+              referrerPolicy="no-referrer"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               loading="lazy"
             />
           ) : (
-            <div style={{
-              width: '100%',
-              height: '100%',
-              background: 'linear-gradient(135deg, #FFD7B8, #FFB07A)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 24,
-            }}>
-              🍽
-            </div>
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #FFD7B8, #FFB07A)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>🍽</div>
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontWeight: 700,
-            fontSize: 14,
-            color: 'var(--brown)',
-            lineHeight: 1.3,
-            marginBottom: 4,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}>
+          <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 800, fontSize: 14, color: 'var(--brown)', lineHeight: 1.3, marginBottom: 5 }}>
             {restaurant.name}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
-            <span style={{ fontSize: 10, color: 'var(--orange-deep)', fontWeight: 700 }}>{restaurant.genre}</span>
-            <span style={{ fontSize: 10, color: 'var(--brown-mute)' }}>·</span>
-            <span style={{ fontSize: 10, color: 'var(--brown-soft)', fontWeight: 600 }}>{restaurant.area}</span>
-            <span style={{ fontSize: 10, color: 'var(--brown-mute)' }}>·</span>
-            <span style={{ fontSize: 10, color: 'var(--brown-soft)', fontWeight: 600 }}>{restaurant.budget}</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--orange-deep)', background: '#FFE3D1', padding: '2px 6px', borderRadius: 99 }}>{restaurant.genre}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brown-soft)', background: '#F2EBDE', padding: '2px 6px', borderRadius: 99 }}>{restaurant.area}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brown-soft)', background: '#F2EBDE', padding: '2px 6px', borderRadius: 99 }}>{restaurant.budget}</span>
           </div>
-          {restaurant.access && (
-            <div style={{ fontSize: 10, color: 'var(--brown-mute)', fontWeight: 600, marginTop: 3 }}>
-              🚶 {restaurant.access}
-            </div>
-          )}
-          {restaurant.desc && (
-            <div style={{ fontSize: 10, color: 'var(--brown-soft)', fontWeight: 600, marginTop: 2, lineHeight: 1.35,
-              overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
-              ✨ {restaurant.desc}
-            </div>
-          )}
         </div>
-        <span style={{
-          fontSize: 14,
-          color: 'var(--brown-mute)',
-          transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-          transition: 'transform 0.2s',
-          flexShrink: 0,
-        }}>
-          ⌄
-        </span>
+        <span style={{ fontSize: 14, color: 'var(--brown-mute)', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }}>⌄</span>
       </button>
+
+      {/* Access + desc — always visible, same as swipe card */}
+      <div style={{ padding: '0 12px', marginBottom: 10 }}>
+        {restaurant.access && (
+          <div style={{ fontSize: 11, color: 'var(--brown-mute)', fontWeight: 600, marginBottom: 6 }}>
+            🚶 {restaurant.access}
+          </div>
+        )}
+        {restaurant.desc && (
+          <div style={{ background: '#FFF4EC', borderRadius: 10, padding: '7px 10px', borderLeft: '3px solid var(--orange)' }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--orange)', marginBottom: 2, letterSpacing: '0.03em' }}>✨ おすすめポイント</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--brown)', lineHeight: 1.45 }}>{restaurant.desc}</div>
+          </div>
+        )}
+      </div>
 
       {expanded && (
         <div style={{
