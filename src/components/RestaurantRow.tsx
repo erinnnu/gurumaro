@@ -122,6 +122,17 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
             <span style={{ fontSize: 10, color: 'var(--brown-mute)' }}>·</span>
             <span style={{ fontSize: 10, color: 'var(--brown-soft)', fontWeight: 600 }}>{restaurant.budget}</span>
           </div>
+          {restaurant.access && (
+            <div style={{ fontSize: 10, color: 'var(--brown-mute)', fontWeight: 600, marginTop: 3 }}>
+              🚶 {restaurant.access}
+            </div>
+          )}
+          {restaurant.desc && (
+            <div style={{ fontSize: 10, color: 'var(--brown-soft)', fontWeight: 600, marginTop: 2, lineHeight: 1.35,
+              overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>
+              ✨ {restaurant.desc}
+            </div>
+          )}
         </div>
         <span style={{
           fontSize: 14,
