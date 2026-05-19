@@ -65,7 +65,7 @@ function SwipeCard({
     >
       <div className="card" style={{ overflow: 'hidden' }}>
         {/* Photo */}
-        <div style={{ height: 'clamp(200px, 38vh, 280px)', position: 'relative', overflow: 'hidden', background: '#F2EBDE', flexShrink: 0 }}>
+        <div style={{ height: 'clamp(280px, 48vh, 380px)', position: 'relative', overflow: 'hidden', background: '#F2EBDE', flexShrink: 0 }}>
           {restaurant.photo ? (
             <img
               src={restaurant.photo}
@@ -135,7 +135,7 @@ export function ScreenSwipe() {
   useEffect(() => {
     if (currentIndex >= restaurants.length && restaurants.length > 0) {
       const yesCount = swipes.filter(s => s.choice === 'yes').length
-      if (currentIndex >= 10 && yesCount <= 2) setShowMatchC(true)
+      if (yesCount <= 2) setShowMatchC(true)
       else handleFinish()
     }
   }, [currentIndex, restaurants.length])
