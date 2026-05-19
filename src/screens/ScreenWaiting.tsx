@@ -4,7 +4,7 @@ import { Mascot } from '../components/Mascot'
 
 export function ScreenWaiting() {
   const { sessionId, pollForPartner, setStep } = useStore()
-  const [copyDone, setCopyDone] = useState(true)
+  const [copyDone, setCopyDone] = useState(false)
   const [time] = useState(() => {
     const now = new Date()
     return `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
