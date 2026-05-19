@@ -78,13 +78,14 @@ export const useStore = create<AppState>((set, get) => ({
       return
     }
 
-    // 同じcookieかどうかチェック
+    // 同じcookieかどうかチェック（非同期で実行）
     const userToken = getUserToken()
-    supabase
-      .from('session_completion')
-      .select('user_token')
-      .eq('session_id', sessionId)
-      .then(({ data }) => {
+    ;(async () => {
+      try {
+        const { data } = await supabase
+          .from('session_completion')
+          .select('user_token')
+          .eq('session_id', sessionId)
         const alreadyDone = data?.some(d => d.user_token === userToken) ?? false
         if (alreadyDone) {
           // 1人目が同じブラウザで再度開いた → 自分のyes一覧を表示
@@ -93,10 +94,10 @@ export const useStore = create<AppState>((set, get) => ({
           // 2人目（新規ユーザー） → aboutyouから開始
           set({ isPartner: true, step: 'aboutyou' })
         }
-      })
-      .catch(() => {
+      } catch {
         set({ step: 'error', errorMessage: 'セッションの確認に失敗しました' })
-      })
+      }
+    })()
   },
 
   fetchRestaurants: async () => {
