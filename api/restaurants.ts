@@ -114,20 +114,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       shops = await tryFetch(buildParams(false, false, false, false))
     }
 
+    const extractPrice = (avg: string | undefined): string => {
+      if (!avg) return ''
+      const m = avg.match(/(\d[\d,]*)/)
+      return m ? `¥${Number(m[1].replace(/,/g, '')).toLocaleString('ja-JP')}` : ''
+    }
+
     const restaurants = shops.map((shop: Record<string, unknown>) => {
       const photo = shop.photo as Record<string, Record<string, string>> | undefined
       const genre = shop.genre as { name?: string } | undefined
       const budget = shop.budget as { average?: string } | undefined
+      const budgetLunch = shop.budget_lunch as { average?: string } | undefined
       const urls = shop.urls as { pc?: string } | undefined
       const smallArea = shop.small_area as { name?: string } | undefined
       const middleArea = shop.middle_area as { name?: string } | undefined
+
+      const dinner = extractPrice(budget?.average)
+      const lunch = extractPrice(budgetLunch?.average)
+      let budgetStr = '要確認'
+      if (lunch && dinner && lunch !== dinner) budgetStr = `ランチ ${lunch} / ディナー ${dinner}`
+      else if (dinner) budgetStr = `ディナー ${dinner}`
+      else if (lunch) budgetStr = `ランチ ${lunch}`
 
       return {
         id: shop.id as string,
         name: shop.name as string,
         genre: genre?.name ?? '',
         area: smallArea?.name ?? middleArea?.name ?? '',
-        budget: budget?.average ? `¥${budget.average}` : '要確認',
+        budget: budgetStr,
         desc: (shop.catch as string) ?? '',
         access: (shop.access as string) ?? '',
         photo: photo?.pc?.l ?? photo?.mobile?.l ?? '',

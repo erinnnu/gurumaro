@@ -20,7 +20,7 @@ export function ScreenTop() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', lineHeight: 1 }}>
-          <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 900, fontSize: 68, color: 'var(--orange)', textShadow: '0 5px 0 #FFD7B8', letterSpacing: '-0.02em', display: 'inline-block' }}>
+          <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 900, fontSize: 'clamp(40px, 16vw, 68px)', color: 'var(--orange)', textShadow: '0 5px 0 #FFD7B8', letterSpacing: '-0.02em', display: 'inline-block', whiteSpace: 'nowrap' }}>
             ぐるまろ<span style={{ color: 'var(--yellow)', textShadow: '0 5px 0 #E0B900' }}>！</span>
           </div>
         </div>

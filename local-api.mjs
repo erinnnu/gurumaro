@@ -127,17 +127,31 @@ const server = http.createServer(async (req, res) => {
         console.log(`[API] Without genre: ${shops.length} shops`)
       }
 
-      const restaurants = shops.map(shop => ({
-        id: shop.id,
-        name: shop.name,
-        genre: shop.genre?.name ?? '',
-        area: shop.small_area?.name ?? shop.middle_area?.name ?? '',
-        budget: shop.budget?.average ? `¥${shop.budget.average}` : '要確認',
-        desc: shop.catch ?? '',
-        access: shop.access ?? '',
-        photo: shop.photo?.pc?.l ?? shop.photo?.mobile?.l ?? '',
-        url: shop.urls?.pc ?? '',
-      }))
+      const extractPrice = (avg) => {
+        if (!avg) return ''
+        const m = avg.match(/(\d[\d,]*)/)
+        return m ? `¥${Number(m[1].replace(/,/g, '')).toLocaleString('ja-JP')}` : ''
+      }
+
+      const restaurants = shops.map(shop => {
+        const dinner = extractPrice(shop.budget?.average)
+        const lunch = extractPrice(shop.budget_lunch?.average)
+        let budget = '要確認'
+        if (lunch && dinner && lunch !== dinner) budget = `ランチ ${lunch} / ディナー ${dinner}`
+        else if (dinner) budget = `ディナー ${dinner}`
+        else if (lunch) budget = `ランチ ${lunch}`
+        return {
+          id: shop.id,
+          name: shop.name,
+          genre: shop.genre?.name ?? '',
+          area: shop.small_area?.name ?? shop.middle_area?.name ?? '',
+          budget,
+          desc: shop.catch ?? '',
+          access: shop.access ?? '',
+          photo: shop.photo?.pc?.l ?? shop.photo?.mobile?.l ?? '',
+          url: shop.urls?.pc ?? '',
+        }
+      })
 
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ restaurants }))
