@@ -10,7 +10,9 @@
       "Bash(lsof:*)",
       "Bash(grep:*)",
       "Bash(sed:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(ssh:*)",
+      "Bash(gh auth:*)"
     ]
   }
 }
