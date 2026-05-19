@@ -124,7 +124,7 @@ export function ScreenSwipe() {
   useEffect(() => {
     if (currentIndex >= restaurants.length && restaurants.length > 0) {
       const yesCount = swipes.filter(s => s.choice === 'yes').length
-      if (yesCount < 3) setShowMatchC(true)
+      if (currentIndex >= 10 && yesCount <= 2) setShowMatchC(true)
       else handleFinish()
     }
   }, [currentIndex, restaurants.length])
@@ -142,7 +142,7 @@ export function ScreenSwipe() {
           <div style={{ marginTop: -70 }}><Mascot pose="thinking" size={120} /></div>
           <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 900, fontSize: 20, marginTop: 4, lineHeight: 1.3, color: 'var(--brown)' }}>まだマッチが見つからないまろ！</div>
           <div style={{ fontSize: 13, color: 'var(--brown-soft)', fontWeight: 500, marginTop: 8, lineHeight: 1.55 }}>
-            {restaurants.length}枚スワイプしたけど、YESが少なめまろ。<br />続けるか、結果を見るか選んでね。
+            {currentIndex}枚スワイプしたけど、YESが少なめまろ。<br />続けるか、結果を見るか選んでね。
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
             <button className="btn-primary" onClick={() => { setShowMatchC(false); setCurrentIndex(0) }}>もう少し続ける</button>
