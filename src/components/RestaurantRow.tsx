@@ -11,19 +11,22 @@ interface RestaurantRowProps {
 
 const BOOKING_SERVICES = [
   {
-    label: 'ホットペッパーで予約する',
-    color: '#E60039',
-    pixel: VC_PIXELS.hotpepper,
-  },
-  {
     label: '食べログで予約する',
     color: '#FF8C00',
     pixel: VC_PIXELS.tabelog,
+    comingSoon: false,
   },
   {
     label: '一休で予約する',
     color: '#0F3D6E',
     pixel: VC_PIXELS.ikyu,
+    comingSoon: false,
+  },
+  {
+    label: 'ホットペッパーグルメで予約する',
+    color: '#E60039',
+    pixel: VC_PIXELS.hotpepper,
+    comingSoon: true,
   },
 ] as const
 
@@ -32,9 +35,9 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
   const inAppBrowser = useMemo(() => detectInAppBrowser(), [])
 
   const bookingLinks = [
-    { ...BOOKING_SERVICES[0], url: buildHotpepperUrl(restaurant.url) },
-    { ...BOOKING_SERVICES[1], url: buildTabelogUrl(restaurant.name) },
-    { ...BOOKING_SERVICES[2], url: buildIkyuUrl(restaurant.name) },
+    { ...BOOKING_SERVICES[0], url: buildTabelogUrl(restaurant.name) },
+    { ...BOOKING_SERVICES[1], url: buildIkyuUrl(restaurant.name) },
+    { ...BOOKING_SERVICES[2], url: buildHotpepperUrl(restaurant.url) },
   ]
 
   return (
@@ -165,36 +168,56 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
           )}
           {bookingLinks.map((link) => (
             <div key={link.label}>
-              <a
-                href={link.url || undefined}
-                target="_blank"
-                rel="noopener noreferrer sponsored"
-                onClick={inAppBrowser && link.url ? (e) => {
-                  e.preventDefault()
-                  openInExternalBrowser(link.url)
-                } : undefined}
-                style={{
+              {link.comingSoon ? (
+                <div style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   width: '100%',
                   padding: '10px 12px',
                   borderRadius: 10,
-                  background: '#fff',
-                  borderLeft: `4px solid ${link.color}`,
-                  fontFamily: 'inherit',
+                  background: '#F5F5F5',
+                  borderLeft: `4px solid #CCC`,
                   fontWeight: 700,
                   fontSize: 13,
-                  color: 'var(--brown)',
-                  textDecoration: 'none',
-                  boxShadow: '0 2px 0 rgba(61,43,31,0.06)',
-                  opacity: link.url ? 1 : 0.4,
-                  pointerEvents: link.url ? 'auto' : 'none',
-                }}
-              >
-                <span>{link.label}</span>
-                <span style={{ color: link.color, fontSize: 14 }}>→</span>
-              </a>
+                  color: '#AAA',
+                  cursor: 'default',
+                }}>
+                  <span>{link.label}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: '#BBB' }}>Coming Soon</span>
+                </div>
+              ) : (
+                <a
+                  href={link.url || undefined}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  onClick={inAppBrowser && link.url ? (e) => {
+                    e.preventDefault()
+                    openInExternalBrowser(link.url)
+                  } : undefined}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    background: '#fff',
+                    borderLeft: `4px solid ${link.color}`,
+                    fontFamily: 'inherit',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    color: 'var(--brown)',
+                    textDecoration: 'none',
+                    boxShadow: '0 2px 0 rgba(61,43,31,0.06)',
+                    opacity: link.url ? 1 : 0.4,
+                    pointerEvents: link.url ? 'auto' : 'none',
+                  }}
+                >
+                  <span>{link.label}</span>
+                  <span style={{ color: link.color, fontSize: 14 }}>→</span>
+                </a>
+              )}
               {/* ValueCommerce トラッキングピクセル */}
               <img src={link.pixel} height="1" width="0" style={{ border: 0, display: 'block' }} alt="" />
             </div>
