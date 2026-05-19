@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Restaurant } from '../types'
 import { buildHotpepperUrl, buildTabelogUrl, buildIkyuUrl, VC_PIXELS } from '../lib/affiliate'
-import { detectInAppBrowser, isIOS, tryOpenInSafari } from '../lib/browser'
+import { detectInAppBrowser, isIOS, tryOpenInSafari, openInExternalBrowser } from '../lib/browser'
 
 interface RestaurantRowProps {
   restaurant: Restaurant
@@ -133,44 +133,34 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
           gap: 6,
           borderTop: '1px dashed #E8DECF',
         }}>
-          {/* LINEなどアプリ内ブラウザ向け注意バナー */}
+          {/* アプリ内ブラウザ向けバナー */}
           {inAppBrowser && (
             <div style={{
               background: '#FFFBE6',
               border: '1px solid #FFD93D',
               borderRadius: 10,
               padding: '8px 10px',
-              fontSize: 11,
-              color: '#7A6200',
-              fontWeight: 600,
-              lineHeight: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
             }}>
-              <div>⚠️ アプリ内ブラウザではCookieの制限で予約が正しく完了しない場合があります。</div>
-              {inAppBrowser === 'line' ? (
-                <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <span>右下の「…」→「ブラウザで開く」を推奨</span>
-                  {isIOS() && (
-                    <button
-                      onClick={() => tryOpenInSafari(window.location.href)}
-                      style={{
-                        background: '#FF6B35', color: '#fff', border: 'none', borderRadius: 99,
-                        fontSize: 10, fontWeight: 800, padding: '3px 10px', cursor: 'pointer',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      Safariで開く
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div style={{ marginTop: 4 }}>ブラウザアプリで開き直すとスムーズです。</div>
+              <div style={{ fontSize: 11, color: '#7A6200', fontWeight: 600, lineHeight: 1.4 }}>
+                ⚠️ 予約ページをSafariで開く
+              </div>
+              {isIOS() && (
+                <button
+                  onClick={() => tryOpenInSafari(window.location.href)}
+                  style={{
+                    flexShrink: 0,
+                    background: '#FF6B35', color: '#fff', border: 'none', borderRadius: 99,
+                    fontSize: 10, fontWeight: 800, padding: '4px 12px', cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  Safariで開く
+                </button>
               )}
-            </div>
-          )}
-          {/* 通常ブラウザ向け小さい注意書き */}
-          {!inAppBrowser && (
-            <div style={{ fontSize: 10, color: 'var(--brown-mute)', fontWeight: 500 }}>
-              Safari / Chromeで開くと予約がスムーズです
             </div>
           )}
           {bookingLinks.map((link) => (
@@ -179,6 +169,10 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
                 href={link.url || undefined}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
+                onClick={inAppBrowser && link.url ? (e) => {
+                  e.preventDefault()
+                  openInExternalBrowser(link.url)
+                } : undefined}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

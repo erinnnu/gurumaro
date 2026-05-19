@@ -18,8 +18,24 @@ export function isIOS(): boolean {
 }
 
 /**
- * LINEブラウザからSafariで開く試み（iOS限定）。
- * x-safari-https:// スキームで外部ブラウザが起動する場合がある。
+ * アプリ内ブラウザから外部ブラウザで指定URLを開く。
+ * - iOS: x-safari-https:// スキームでSafariが起動（LINE画面はそのまま残る）
+ * - Android: window.open(_blank) でデフォルトブラウザが開く
+ * 失敗時は通常のリンク遷移にフォールバック。
+ */
+export function openInExternalBrowser(url: string): void {
+  if (isIOS()) {
+    // x-safari-https:// はiOSがSafariを起動するURL scheme
+    // LINEの画面はそのまま残るので、アプリ側の状態は失われない
+    window.location.href = url.replace(/^https?:\/\//, 'x-safari-https://')
+  } else {
+    // Android: _blank で外部ブラウザが開くことが多い
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+}
+
+/**
+ * 現在のページ全体をSafariで開く試み（iOS限定）。
  */
 export function tryOpenInSafari(url: string): boolean {
   if (!isIOS()) return false
