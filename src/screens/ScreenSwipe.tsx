@@ -197,15 +197,75 @@ export function ScreenSwipe() {
 
 function ActionButtons({ onSwipe, large }: { onSwipe: (c: 'yes' | 'no') => void; large?: boolean }) {
   const noSize = large ? 80 : 64
-  const yesSize = large ? 90 : 72
+  const yesSize = large ? 90 : 76
+  const [bouncing, setBouncing] = useState(false)
+  const [hearts, setHearts] = useState<{ id: number; x: number; rot: number }[]>([])
+
+  const handleYes = () => {
+    onSwipe('yes')
+    setBouncing(true)
+    setTimeout(() => setBouncing(false), 400)
+    const newHearts = Array.from({ length: 6 }, (_, i) => ({
+      id: Date.now() + i,
+      x: (Math.random() - 0.5) * 80,
+      rot: (Math.random() - 0.5) * 40,
+    }))
+    setHearts(h => [...h, ...newHearts])
+    setTimeout(() => setHearts(h => h.filter(x => !newHearts.find(n => n.id === x.id))), 800)
+  }
+
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: large ? 48 : 32 }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: large ? 48 : 36 }}>
+      {/* NO */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
         <button onClick={() => onSwipe('no')} style={{ width: noSize, height: noSize, borderRadius: '50%', border: 'none', background: '#fff', boxShadow: '0 4px 0 #E8DECF, 0 8px 18px rgba(61,43,31,0.12)', fontSize: large ? 32 : 26, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brown-mute)' }}>✕</button>
         <div style={{ fontSize: large ? 13 : 11, color: 'var(--brown-mute)', fontWeight: 700 }}>違うかな</div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-        <button onClick={() => onSwipe('yes')} style={{ width: yesSize, height: yesSize, borderRadius: '50%', border: 'none', background: 'linear-gradient(180deg, #FF6B9A, #E84B7E)', boxShadow: '0 6px 0 #C73B6A, 0 10px 24px rgba(255,107,154,0.4)', fontSize: large ? 36 : 30, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>♥</button>
+
+      {/* YES with hearts */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, position: 'relative' }}>
+        {/* Floating hearts */}
+        {hearts.map(h => (
+          <span
+            key={h.id}
+            style={{
+              position: 'absolute',
+              top: yesSize / 2,
+              left: '50%',
+              marginLeft: h.x,
+              fontSize: 14 + Math.random() * 8,
+              pointerEvents: 'none',
+              animation: 'float-heart 0.75s ease-out forwards',
+              // @ts-ignore
+              '--rot': `${h.rot}deg`,
+              zIndex: 10,
+            }}
+          >
+            💗
+          </span>
+        ))}
+
+        <button
+          onClick={handleYes}
+          className={bouncing ? 'yes-bounce' : ''}
+          style={{
+            width: yesSize,
+            height: yesSize,
+            borderRadius: '50%',
+            border: '3px solid rgba(255,255,255,0.5)',
+            background: 'radial-gradient(circle at 38% 35%, #FF8FB8, #FF4D8D)',
+            boxShadow: '0 6px 0 #C73B6A, 0 10px 28px rgba(255,77,141,0.5), inset 0 2px 6px rgba(255,255,255,0.35)',
+            fontSize: large ? 36 : 32,
+            color: '#fff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            userSelect: 'none',
+          }}
+        >
+          🤍
+        </button>
         <div style={{ fontSize: large ? 13 : 12, color: '#E84B7E', fontWeight: 800 }}>行きたい！</div>
       </div>
     </div>

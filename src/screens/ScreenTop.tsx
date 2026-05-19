@@ -20,8 +20,8 @@ export function ScreenTop() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', lineHeight: 1 }}>
-          <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 900, fontSize: 64, color: 'var(--orange)', textShadow: '0 4px 0 #FFD7B8', letterSpacing: '-0.02em', display: 'inline-block', transform: 'rotate(-2deg)' }}>
-            ぐるまろ<span style={{ color: 'var(--yellow)', textShadow: '0 4px 0 #E0B900' }}>！</span>
+          <div style={{ fontFamily: 'M PLUS Rounded 1c, sans-serif', fontWeight: 900, fontSize: 68, color: 'var(--orange)', textShadow: '0 5px 0 #FFD7B8', letterSpacing: '-0.02em', display: 'inline-block' }}>
+            ぐるまろ<span style={{ color: 'var(--yellow)', textShadow: '0 5px 0 #E0B900' }}>！</span>
           </div>
         </div>
 
@@ -31,7 +31,7 @@ export function ScreenTop() {
         </div>
 
         {/* Mascot */}
-        <div style={{ position: 'relative', marginTop: 16, marginBottom: 16 }}>
+        <div style={{ position: 'relative', marginTop: 16, marginBottom: 16, animation: 'mascot-sway 2.4s ease-in-out infinite' }}>
           <Mascot pose="base" size={Math.min(220, window.innerHeight * 0.28)} />
           <div style={{ position: 'absolute', bottom: -10, left: '50%', transform: 'translateX(-50%)', width: 160, height: 16, background: 'radial-gradient(ellipse at center, rgba(61,43,31,0.16) 0%, transparent 70%)' }} />
         </div>

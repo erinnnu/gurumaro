@@ -198,6 +198,34 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Yes button bounce */
+@keyframes yes-bounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(0.88); }
+  60%  { transform: scale(1.18); }
+  80%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+.yes-bounce {
+  animation: yes-bounce 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* Mascot sway */
+@keyframes mascot-sway {
+  0%   { transform: rotate(0deg) translateY(0); }
+  20%  { transform: rotate(-6deg) translateY(-4px); }
+  50%  { transform: rotate(6deg) translateY(-2px); }
+  80%  { transform: rotate(-4deg) translateY(-3px); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+
+/* Floating hearts */
+@keyframes float-heart {
+  0%   { opacity: 1; transform: translateY(0) scale(1) rotate(var(--rot)); }
+  80%  { opacity: 0.7; }
+  100% { opacity: 0; transform: translateY(-90px) scale(0.5) rotate(var(--rot)); }
+}
+
 /* Toast */
 .toast {
   position: fixed;
