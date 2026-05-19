@@ -118,6 +118,7 @@ export function ScreenSwipe() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [mascotReaction, setMascotReaction] = useState<'like' | 'nope' | null>(null)
   const [showMatchC, setShowMatchC] = useState(false)
+  const [matchCShown, setMatchCShown] = useState(false)
 
   const remaining = restaurants.length - currentIndex
   const currentRestaurant: Restaurant | undefined = restaurants[currentIndex]
@@ -135,7 +136,7 @@ export function ScreenSwipe() {
   useEffect(() => {
     if (currentIndex >= restaurants.length && restaurants.length > 0) {
       const yesCount = swipes.filter(s => s.choice === 'yes').length
-      if (yesCount <= 2) setShowMatchC(true)
+      if (yesCount <= 2 && !matchCShown) setShowMatchC(true)
       else handleFinish()
     }
   }, [currentIndex, restaurants.length])
@@ -156,7 +157,7 @@ export function ScreenSwipe() {
             {currentIndex}枚スワイプしたけど、YESが少なめまろ。<br />続けるか、結果を見るか選んでね。
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
-            <button className="btn-primary" onClick={() => { clearSwipes(); setShowMatchC(false); setCurrentIndex(0) }}>もう少し続ける</button>
+            <button className="btn-primary" onClick={() => { clearSwipes(); setMatchCShown(true); setShowMatchC(false); setCurrentIndex(0) }}>もう少し続ける</button>
             <button className="btn-secondary" onClick={handleFinish}>気になったお店だけ見る</button>
           </div>
         </div>
