@@ -35,8 +35,8 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
   const inAppBrowser = useMemo(() => detectInAppBrowser(), [])
 
   const bookingLinks = [
-    { ...BOOKING_SERVICES[0], url: buildTabelogUrl(restaurant.name) },
-    { ...BOOKING_SERVICES[1], url: buildIkyuUrl(restaurant.name) },
+    { ...BOOKING_SERVICES[0], url: buildTabelogUrl(restaurant.name, restaurant.area) },
+    { ...BOOKING_SERVICES[1], url: buildIkyuUrl(restaurant.name, restaurant.area) },
     { ...BOOKING_SERVICES[2], url: buildHotpepperUrl(restaurant.url) },
   ]
 

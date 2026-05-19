@@ -17,15 +17,30 @@ export function buildHotpepperUrl(restaurantUrl: string): string {
   return vcLink(HP_PID, restaurantUrl)
 }
 
-/** 食べログ MyLink（店名で検索ページへ） */
-export function buildTabelogUrl(name: string): string {
-  const target = `https://tabelog.com/rstLst/?vs=1&sw=${encodeURIComponent(name)}`
+/**
+ * 食べログ・一休向けに店名から余分な記号を除去する
+ * 例: 「【全席喫煙可能】イタめし酒場Viva（ビバ）中野店」→「イタめし酒場Viva 中野店」
+ */
+function cleanName(name: string): string {
+  return name
+    .replace(/【[^】]*】/g, '')   // 【...】を除去
+    .replace(/（[^）]*）/g, '')   // （...）を除去
+    .replace(/\([^)]*\)/g, '')   // (...)を除去
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** 食べログ MyLink（店名＋エリアで検索） */
+export function buildTabelogUrl(name: string, area?: string): string {
+  const q = [cleanName(name), area].filter(Boolean).join(' ')
+  const target = `https://tabelog.com/rstLst/?vs=1&sw=${encodeURIComponent(q)}`
   return vcLink(TABELOG_PID, target)
 }
 
-/** 一休 MyLink（店名で検索ページへ） */
-export function buildIkyuUrl(name: string): string {
-  const target = `https://restaurant.ikyu.com/search/?keyword=${encodeURIComponent(name)}`
+/** 一休 MyLink（店名＋エリアで検索） */
+export function buildIkyuUrl(name: string, area?: string): string {
+  const q = [cleanName(name), area].filter(Boolean).join(' ')
+  const target = `https://restaurant.ikyu.com/search/?keyword=${encodeURIComponent(q)}`
   return vcLink(IKYU_PID, target)
 }
 
