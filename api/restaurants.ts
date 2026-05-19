@@ -130,7 +130,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         budget: budget?.average ? `¥${budget.average}` : '要確認',
         desc: (shop.catch as string) ?? '',
         access: (shop.access as string) ?? '',
-        photo: photo?.mobile?.l ?? photo?.pc?.l ?? '',
+        photo: photo?.pc?.l ?? photo?.mobile?.l ?? '',
         url: urls?.pc ?? `https://restaurant.hotpepper.jp/strJ${(shop.id as string).replace(/^J/, '')}/`,
       }
     })

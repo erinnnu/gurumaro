@@ -135,7 +135,7 @@ const server = http.createServer(async (req, res) => {
         budget: shop.budget?.average ? `¥${shop.budget.average}` : '要確認',
         desc: shop.catch ?? '',
         access: shop.access ?? '',
-        photo: shop.photo?.mobile?.l ?? shop.photo?.pc?.l ?? '',
+        photo: shop.photo?.pc?.l ?? shop.photo?.mobile?.l ?? '',
         url: shop.urls?.pc ?? '',
       }))
 
