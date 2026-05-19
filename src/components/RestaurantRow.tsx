@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Restaurant } from '../types'
 import { buildHotpepperUrl, buildTabelogUrl, buildIkyuUrl, VC_PIXELS } from '../lib/affiliate'
+import { detectInAppBrowser, isIOS, tryOpenInSafari } from '../lib/browser'
 
 interface RestaurantRowProps {
   restaurant: Restaurant
@@ -28,6 +29,7 @@ const BOOKING_SERVICES = [
 
 export function RestaurantRow({ restaurant, match, defaultExpanded }: RestaurantRowProps) {
   const [expanded, setExpanded] = useState(defaultExpanded ?? false)
+  const inAppBrowser = useMemo(() => detectInAppBrowser(), [])
 
   const bookingLinks = [
     { ...BOOKING_SERVICES[0], url: buildHotpepperUrl(restaurant.url) },
@@ -131,6 +133,46 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
           gap: 6,
           borderTop: '1px dashed #E8DECF',
         }}>
+          {/* LINEなどアプリ内ブラウザ向け注意バナー */}
+          {inAppBrowser && (
+            <div style={{
+              background: '#FFFBE6',
+              border: '1px solid #FFD93D',
+              borderRadius: 10,
+              padding: '8px 10px',
+              fontSize: 11,
+              color: '#7A6200',
+              fontWeight: 600,
+              lineHeight: 1.5,
+            }}>
+              <div>⚠️ アプリ内ブラウザではCookieの制限で予約が正しく完了しない場合があります。</div>
+              {inAppBrowser === 'line' ? (
+                <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <span>右下の「…」→「ブラウザで開く」を推奨</span>
+                  {isIOS() && (
+                    <button
+                      onClick={() => tryOpenInSafari(window.location.href)}
+                      style={{
+                        background: '#FF6B35', color: '#fff', border: 'none', borderRadius: 99,
+                        fontSize: 10, fontWeight: 800, padding: '3px 10px', cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Safariで開く
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div style={{ marginTop: 4 }}>ブラウザアプリで開き直すとスムーズです。</div>
+              )}
+            </div>
+          )}
+          {/* 通常ブラウザ向け小さい注意書き */}
+          {!inAppBrowser && (
+            <div style={{ fontSize: 10, color: 'var(--brown-mute)', fontWeight: 500 }}>
+              Safari / Chromeで開くと予約がスムーズです
+            </div>
+          )}
           {bookingLinks.map((link) => (
             <div key={link.label}>
               <a
