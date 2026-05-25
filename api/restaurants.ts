@@ -16,6 +16,29 @@ const PREF_TO_LARGE_AREA: Record<string, string> = {
   '福岡県': 'Z061',
 }
 
+// Area name → Hot Pepper middle area code
+// 使うことで large_area（都道府県全域）より絞った地域検索が可能
+const AREA_TO_MIDDLE: Record<string, string> = {
+  // 東京
+  '渋谷': 'Y031', '恵比寿': 'Y031', '代官山': 'Y031', '中目黒': 'Y031',
+  '六本木': 'Y032', '麻布': 'Y032', '広尾': 'Y032', '赤坂': 'Y032',
+  '青山': 'Y033', '原宿': 'Y033', '表参道': 'Y033',
+  '新宿': 'Y034',
+  '池袋': 'Y035',
+  '銀座': 'Y036',
+  '秋葉原': 'Y037',
+  '上野': 'Y038',
+  '品川': 'Y039',
+  // 神奈川
+  '横浜': 'Y061', '川崎': 'Y063',
+  // 大阪
+  '梅田': 'Y091', '難波': 'Y092', '心斎橋': 'Y092', '天王寺': 'Y093',
+  // 愛知
+  '名古屋': 'Y121', '栄': 'Y121',
+  // 福岡
+  '博多': 'Y151', '天神': 'Y151', '中洲': 'Y151',
+}
+
 // Cuisine name → Hot Pepper genre code
 const CUISINE_TO_GENRE: Record<string, string> = {
   'イタリアン': 'G006',
@@ -65,9 +88,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const largeArea = PREF_TO_LARGE_AREA[prefecture] ?? 'Z011'
 
-  // Build keyword from areas + situation hints
+  // エリア名をmiddle_areaコードにマップ（地理的絞り込み）
+  const middleAreaCodes = [...new Set(
+    (areas as string[]).map((a) => AREA_TO_MIDDLE[a]).filter(Boolean)
+  )]
+  // middle_areaコードに変換できなかったエリアはキーワードとして使用
+  const unmappedAreas = (areas as string[]).filter((a) => !AREA_TO_MIDDLE[a])
+
+  // Build keyword from unmapped areas + situation hints
   const keywords: string[] = [
-    ...areas,
+    ...unmappedAreas,
     ...situations.flatMap((s: string) => (SITUATION_KEYWORDS[s] ?? '').split(' ')).filter(Boolean),
   ]
 
@@ -84,7 +114,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     key: API_KEY,
     format: 'json',
     count: '8',
-    large_area: largeArea,
+    // middle_areaが取れた場合はそちらを優先、なければlarge_areaで都道府県指定
+    ...(middleAreaCodes.length ? { middle_area: middleAreaCodes[0] } : { large_area: largeArea }),
     ...(withGenre && genreParam ? { genre: genreParam } : {}),
     ...(withKeyword && keywords.length ? { keyword: keywords.join(' ') } : {}),
     ...(withBudget && budgetCode ? { budget: budgetCode } : {}),

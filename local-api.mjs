@@ -31,6 +31,22 @@ const PREF_TO_LARGE_AREA = {
   '愛知県': 'Z051', '福岡県': 'Z061',
 }
 
+const AREA_TO_MIDDLE = {
+  '渋谷': 'Y031', '恵比寿': 'Y031', '代官山': 'Y031', '中目黒': 'Y031',
+  '六本木': 'Y032', '麻布': 'Y032', '広尾': 'Y032', '赤坂': 'Y032',
+  '青山': 'Y033', '原宿': 'Y033', '表参道': 'Y033',
+  '新宿': 'Y034',
+  '池袋': 'Y035',
+  '銀座': 'Y036',
+  '秋葉原': 'Y037',
+  '上野': 'Y038',
+  '品川': 'Y039',
+  '横浜': 'Y061', '川崎': 'Y063',
+  '梅田': 'Y091', '難波': 'Y092', '心斎橋': 'Y092', '天王寺': 'Y093',
+  '名古屋': 'Y121', '栄': 'Y121',
+  '博多': 'Y151', '天神': 'Y151', '中洲': 'Y151',
+}
+
 const CUISINE_TO_GENRE = {
   'イタリアン': 'G006', 'フレンチ': 'G006', '和食': 'G004',
   '中華': 'G007', '韓国料理': 'G017', 'カフェ': 'G014',
@@ -72,9 +88,11 @@ const server = http.createServer(async (req, res) => {
   req.on('end', async () => {
     try {
       const { cuisines = [], situations = [], prefecture = '東京都', areas = [], mealtime = '', budgets = [] } = JSON.parse(body || '{}')
+      const middleAreaCodes = [...new Set(areas.map(a => AREA_TO_MIDDLE[a]).filter(Boolean))]
+      const unmappedAreas = areas.filter(a => !AREA_TO_MIDDLE[a])
       const largeArea = PREF_TO_LARGE_AREA[prefecture] ?? 'Z011'
       const keywords = [
-        ...areas,
+        ...unmappedAreas,
         ...situations.flatMap(s => (SITUATION_KEYWORDS[s] ?? '').split(' ')).filter(Boolean),
       ]
       const genreCodes = [...new Set(cuisines.map(c => CUISINE_TO_GENRE[c]).filter(Boolean))]
@@ -88,7 +106,7 @@ const server = http.createServer(async (req, res) => {
         key: API_KEY,
         format: 'json',
         count: '8',
-        large_area: largeArea,
+        ...(middleAreaCodes.length ? { middle_area: middleAreaCodes[0] } : { large_area: largeArea }),
         ...(withGenre && genreParam ? { genre: genreParam } : {}),
         ...(withKeyword && keywords.length ? { keyword: keywords.join(' ') } : {}),
         ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
