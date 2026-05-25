@@ -30,10 +30,14 @@ function cleanName(name: string): string {
     .trim()
 }
 
-/** 食べログ MyLink（Google経由で site:tabelog.com 検索 → 精度が高い） */
+/**
+ * 食べログ MyLink
+ * 食べログの検索結果ページに直接遷移する。
+ * 店名（クリーニング済み）＋エリアで検索。
+ */
 export function buildTabelogUrl(name: string, area?: string): string {
-  const q = ['site:tabelog.com', cleanName(name), area].filter(Boolean).join(' ')
-  const target = `https://www.google.com/search?q=${encodeURIComponent(q)}`
+  const q = [cleanName(name), area].filter(Boolean).join(' ')
+  const target = `https://tabelog.com/rstLst/?vs=1&sw=${encodeURIComponent(q)}`
   return vcLink(TABELOG_PID, target)
 }
 
