@@ -1,5 +1,4 @@
 // ローカル開発用APIサーバー（npm run dev と一緒に使う）
-// Hot Pepper APIキーをサーバーサイドで使うためのプロキシ
 import http from 'http'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
@@ -7,7 +6,6 @@ import { dirname, join } from 'path'
 
 const __dir = dirname(fileURLToPath(import.meta.url))
 
-// .envを手動で読む（dotenvなしで動くように）
 function loadEnv() {
   try {
     const env = readFileSync(join(__dir, '.env'), 'utf-8')
@@ -60,20 +58,13 @@ const SITUATION_KEYWORDS = {
 }
 
 const BUDGET_TO_CODE = {
-  // ランチ
-  'お手軽 (〜¥1,000)':                   'B010',
-  'ふつう (¥1,000〜¥1,500)':             'B011',
-  'ちょっとこだわり (¥1,500〜¥2,500)':   'B001',
-  'プチ贅沢 (¥2,500〜)':                 'B002',
-  // ディナー
-  'カジュアル (〜¥3,000)':               'B001',
-  'ふつう (¥3,000〜¥5,000)':             'B003',
-  'ちょっと贅沢 (¥5,000〜¥8,000)':       'B008',
-  '特別な日 (¥8,000〜)':                 'B004',
+  'お手軽 (〜¥1,000)': 'B010', 'ふつう (¥1,000〜¥1,500)': 'B011',
+  'ちょっとこだわり (¥1,500〜¥2,500)': 'B001', 'プチ贅沢 (¥2,500〜)': 'B002',
+  'カジュアル (〜¥3,000)': 'B001', 'ふつう (¥3,000〜¥5,000)': 'B003',
+  'ちょっと贅沢 (¥5,000〜¥8,000)': 'B008', '特別な日 (¥8,000〜)': 'B004',
 }
 
 const server = http.createServer(async (req, res) => {
-  // CORS headers for Vite dev server
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -88,30 +79,30 @@ const server = http.createServer(async (req, res) => {
   req.on('end', async () => {
     try {
       const { cuisines = [], situations = [], prefecture = '東京都', areas = [], mealtime = '', budgets = [] } = JSON.parse(body || '{}')
-      const middleAreaCodes = [...new Set(areas.map(a => AREA_TO_MIDDLE[a]).filter(Boolean))]
-      const unmappedAreas = areas.filter(a => !AREA_TO_MIDDLE[a])
+
       const largeArea = PREF_TO_LARGE_AREA[prefecture] ?? 'Z011'
-      const keywords = [
-        ...unmappedAreas,
-        ...situations.flatMap(s => (SITUATION_KEYWORDS[s] ?? '').split(' ')).filter(Boolean),
-      ]
+      const middleAreaCodes = [...new Set(areas.map(a => AREA_TO_MIDDLE[a]).filter(Boolean))]
+      const situationKeywords = situations.flatMap(s => (SITUATION_KEYWORDS[s] ?? '').split(' ')).filter(Boolean)
+      const fallbackKeywords = [...areas, ...situationKeywords]
+
       const genreCodes = [...new Set(cuisines.map(c => CUISINE_TO_GENRE[c]).filter(Boolean))]
       const genreParam = genreCodes[0] ?? ''
-
       const budgetCode = budgets.length ? (BUDGET_TO_CODE[budgets[0]] ?? '') : ''
       const isLunch = mealtime === 'ランチ'
 
-      // 段階的に条件を緩めながら検索（厳しすぎるフィルタで0件にならないよう）
-      const buildParams = ({ withBudget, withLunch, withKeyword = true, withGenre = true }) => new URLSearchParams({
-        key: API_KEY,
-        format: 'json',
-        count: '8',
-        ...(middleAreaCodes.length ? { middle_area: middleAreaCodes[0] } : { large_area: largeArea }),
-        ...(withGenre && genreParam ? { genre: genreParam } : {}),
-        ...(withKeyword && keywords.length ? { keyword: keywords.join(' ') } : {}),
-        ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
-        ...(withLunch && isLunch ? { lunch: '1' } : {}),
-      })
+      const buildParams = ({ withBudget, withLunch, withKeyword = true, withGenre = true, useMiddleArea = true }) => {
+        const kw = useMiddleArea ? situationKeywords : fallbackKeywords
+        return new URLSearchParams({
+          key: API_KEY,
+          format: 'json',
+          count: '8',
+          ...(useMiddleArea && middleAreaCodes.length ? { middle_area: middleAreaCodes[0] } : { large_area: largeArea }),
+          ...(withGenre && genreParam ? { genre: genreParam } : {}),
+          ...(withKeyword && kw.length ? { keyword: kw.join(' ') } : {}),
+          ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
+          ...(withLunch && isLunch ? { lunch: '1' } : {}),
+        })
+      }
 
       const tryFetch = async (params) => {
         const url = `${BASE_URL}?${params}`
@@ -121,7 +112,6 @@ const server = http.createServer(async (req, res) => {
         return d?.results?.shop ?? []
       }
 
-      // 段階的に条件を緩めながら最低8件を目指す
       let shops = await tryFetch(buildParams({ withBudget: true, withLunch: true }))
       console.log(`[API] Full filter: ${shops.length} shops`)
 
@@ -129,20 +119,25 @@ const server = http.createServer(async (req, res) => {
         shops = await tryFetch(buildParams({ withBudget: false, withLunch: true }))
         console.log(`[API] Without budget: ${shops.length} shops`)
       }
-
       if (shops.length < 8 && isLunch) {
         shops = await tryFetch(buildParams({ withBudget: false, withLunch: false }))
         console.log(`[API] Without lunch filter: ${shops.length} shops`)
       }
-
-      if (shops.length < 8 && keywords.length) {
+      if (shops.length < 8 && situationKeywords.length) {
         shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: false }))
         console.log(`[API] Without keyword: ${shops.length} shops`)
       }
-
       if (shops.length < 8 && genreParam) {
         shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: false, withGenre: false }))
         console.log(`[API] Without genre: ${shops.length} shops`)
+      }
+      // middle_areaコードが正しくない場合のフォールバック
+      if (shops.length === 0 && middleAreaCodes.length) {
+        console.log('[API] middle_area returned 0, falling back to large_area+keyword')
+        shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: true, withGenre: true, useMiddleArea: false }))
+        if (shops.length < 8) {
+          shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: false, withGenre: false, useMiddleArea: false }))
+        }
       }
 
       const extractPrice = (avg) => {

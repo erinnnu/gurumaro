@@ -110,17 +110,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const budgetCode = (budgets as string[]).length ? (BUDGET_TO_CODE[(budgets as string[])[0]] ?? '') : ''
   const isLunch = mealtime === 'ランチ'
 
-  const buildParams = (withBudget: boolean, withLunch: boolean, withKeyword: boolean, withGenre: boolean) => new URLSearchParams({
-    key: API_KEY,
-    format: 'json',
-    count: '8',
-    // middle_areaが取れた場合はそちらを優先、なければlarge_areaで都道府県指定
-    ...(middleAreaCodes.length ? { middle_area: middleAreaCodes[0] } : { large_area: largeArea }),
-    ...(withGenre && genreParam ? { genre: genreParam } : {}),
-    ...(withKeyword && keywords.length ? { keyword: keywords.join(' ') } : {}),
-    ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
-    ...(withLunch && isLunch ? { lunch: '1' } : {}),
-  })
+  // situation由来のキーワードのみ（エリア名はmiddle_areaに任せる）
+  const situationKeywords = situations.flatMap(
+    (s: string) => (SITUATION_KEYWORDS[s] ?? '').split(' ')
+  ).filter(Boolean)
+
+  // large_areaフォールバック時のキーワード（エリア名も含む）
+  const fallbackKeywords = [...(areas as string[]), ...situationKeywords]
+
+  const buildParams = (
+    withBudget: boolean, withLunch: boolean, withKeyword: boolean, withGenre: boolean,
+    useMiddleArea = true
+  ) => {
+    const kw = useMiddleArea ? situationKeywords : fallbackKeywords
+    return new URLSearchParams({
+      key: API_KEY,
+      format: 'json',
+      count: '8',
+      ...(useMiddleArea && middleAreaCodes.length
+        ? { middle_area: middleAreaCodes[0] }
+        : { large_area: largeArea }),
+      ...(withGenre && genreParam ? { genre: genreParam } : {}),
+      ...(withKeyword && kw.length ? { keyword: kw.join(' ') } : {}),
+      ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
+      ...(withLunch && isLunch ? { lunch: '1' } : {}),
+    })
+  }
 
   const tryFetch = async (params: URLSearchParams) => {
     const apiRes = await fetch(`${BASE_URL}?${params.toString()}`)
@@ -143,6 +158,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (shops.length < 8 && genreParam) {
       shops = await tryFetch(buildParams(false, false, false, false))
+    }
+    // middle_areaコードが間違っている場合のフォールバック：large_area+keywordで再検索
+    if (shops.length === 0 && middleAreaCodes.length) {
+      shops = await tryFetch(buildParams(false, false, true, true, false))
+      if (shops.length < 8) {
+        shops = await tryFetch(buildParams(false, false, false, false, false))
+      }
     }
 
     const extractPrice = (avg: string | undefined): string => {
