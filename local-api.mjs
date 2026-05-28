@@ -46,7 +46,7 @@ const AREA_TO_MIDDLE = {
 }
 
 const CUISINE_TO_GENRE = {
-  'イタリアン': 'G006', 'フレンチ': 'G006', '和食': 'G004',
+  'イタリアン・フレンチ': 'G006', '和食': 'G004',
   '中華': 'G007', '韓国料理': 'G017', 'カフェ': 'G014',
   '焼肉': 'G008', 'その他': 'G015',
 }
@@ -127,16 +127,13 @@ const server = http.createServer(async (req, res) => {
         shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: false }))
         console.log(`[API] Without keyword: ${shops.length} shops`)
       }
-      if (shops.length < 8 && genreParam) {
-        shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: false, withGenre: false }))
-        console.log(`[API] Without genre: ${shops.length} shops`)
-      }
-      // middle_areaコードが正しくない場合のフォールバック
+      // ジャンルは絶対に外さない
+      // middle_areaコードが正しくない場合のフォールバック（ジャンル維持）
       if (shops.length === 0 && middleAreaCodes.length) {
         console.log('[API] middle_area returned 0, falling back to large_area+keyword')
         shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: true, withGenre: true, useMiddleArea: false }))
         if (shops.length < 8) {
-          shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: false, withGenre: false, useMiddleArea: false }))
+          shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: false, withGenre: true, useMiddleArea: false }))
         }
       }
 

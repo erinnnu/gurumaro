@@ -22,12 +22,6 @@ const BOOKING_SERVICES = [
     pixel: VC_PIXELS.ikyu,
     comingSoon: true,
   },
-  {
-    label: 'ホットペッパーグルメで予約する',
-    color: '#E60039',
-    pixel: VC_PIXELS.hotpepper,
-    comingSoon: true,
-  },
 ] as const
 
 export function RestaurantRow({ restaurant, match, defaultExpanded }: RestaurantRowProps) {
@@ -37,7 +31,6 @@ export function RestaurantRow({ restaurant, match, defaultExpanded }: Restaurant
   const bookingLinks = [
     { ...BOOKING_SERVICES[0], url: buildTabelogUrl(restaurant.name, restaurant.area) },
     { ...BOOKING_SERVICES[1], url: buildIkyuUrl(restaurant.name, restaurant.area) },
-    { ...BOOKING_SERVICES[2], url: buildHotpepperUrl(restaurant.url) },
   ]
 
   return (

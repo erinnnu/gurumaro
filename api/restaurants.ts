@@ -41,8 +41,7 @@ const AREA_TO_MIDDLE: Record<string, string> = {
 
 // Cuisine name → Hot Pepper genre code
 const CUISINE_TO_GENRE: Record<string, string> = {
-  'イタリアン': 'G006',
-  'フレンチ':   'G006',
+  'イタリアン・フレンチ': 'G006',
   '和食':       'G004',
   '中華':       'G007',
   '韓国料理':   'G017',
@@ -156,14 +155,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (shops.length < 8 && keywords.length) {
       shops = await tryFetch(buildParams(false, false, false, true))
     }
-    if (shops.length < 8 && genreParam) {
-      shops = await tryFetch(buildParams(false, false, false, false))
-    }
-    // middle_areaコードが間違っている場合のフォールバック：large_area+keywordで再検索
+    // ジャンルは絶対に外さない
+    // middle_areaコードが間違っている場合のフォールバック：large_area+keyword（ジャンル維持）
     if (shops.length === 0 && middleAreaCodes.length) {
       shops = await tryFetch(buildParams(false, false, true, true, false))
       if (shops.length < 8) {
-        shops = await tryFetch(buildParams(false, false, false, false, false))
+        shops = await tryFetch(buildParams(false, false, false, true, false))
       }
     }
 

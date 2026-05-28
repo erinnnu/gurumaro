@@ -4,8 +4,7 @@ import { ProgressBar } from '../components/ProgressBar'
 import { playTap } from '../lib/sounds'
 
 const CUISINES = [
-  { label: 'イタリアン', emoji: '🍝' },
-  { label: 'フレンチ', emoji: '🥐' },
+  { label: 'イタリアン・フレンチ', emoji: '🍝' },
   { label: '和食', emoji: '🍣' },
   { label: '中華', emoji: '🥟' },
   { label: '韓国料理', emoji: '🌶' },
