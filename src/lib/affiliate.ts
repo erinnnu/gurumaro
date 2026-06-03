@@ -23,9 +23,11 @@ export function buildHotpepperUrl(restaurantUrl: string): string {
  */
 function cleanName(name: string): string {
   return name
-    .replace(/【[^】]*】/g, '')   // 【...】を除去
-    .replace(/（[^）]*）/g, '')   // （...）を除去
-    .replace(/\([^)]*\)/g, '')   // (...)を除去
+    .replace(/【[^】]*】/g, '')                    // 【...】を除去
+    .replace(/（[^）]*）/g, '')                    // （...）を除去
+    .replace(/\([^)]*\)/g, '')                    // (...)を除去
+    .replace(/\s*[\u2500-\u257F\-ー]+.*/g, '')    // ダッシュ以降を除去
+    .replace(/\s+[^\s]*[店舗號号](\s|$)/g, ' ')   // 「○○店」「○○號」を除去
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -36,14 +38,14 @@ function cleanName(name: string): string {
  * 店名（クリーニング済み）＋エリアで検索。
  */
 export function buildTabelogUrl(name: string, area?: string): string {
-  const q = [cleanName(name), area].filter(Boolean).join(' ')
+  const q = cleanName(name)
   const target = `https://tabelog.com/rstLst/?vs=1&sw=${encodeURIComponent(q)}`
   return vcLink(TABELOG_PID, target)
 }
 
-/** 一休 MyLink（店名＋エリアで検索） */
+/** 一休 MyLink（店名で検索） */
 export function buildIkyuUrl(name: string, area?: string): string {
-  const q = [cleanName(name), area].filter(Boolean).join(' ')
+  const q = cleanName(name)
   const target = `https://restaurant.ikyu.com/search/?keyword=${encodeURIComponent(q)}`
   return vcLink(IKYU_PID, target)
 }

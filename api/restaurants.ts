@@ -16,27 +16,41 @@ const PREF_TO_LARGE_AREA: Record<string, string> = {
   '福岡県': 'Z061',
 }
 
-// Area name → Hot Pepper middle area code
-// 使うことで large_area（都道府県全域）より絞った地域検索が可能
-const AREA_TO_MIDDLE: Record<string, string> = {
+// Area name → 緯度経度（Hot Pepper lat/lng/range パラメータ用）
+const AREA_TO_LATLNG: Record<string, { lat: number; lng: number }> = {
   // 東京
-  '渋谷': 'Y031', '恵比寿': 'Y031', '代官山': 'Y031', '中目黒': 'Y031',
-  '六本木': 'Y032', '麻布': 'Y032', '広尾': 'Y032', '赤坂': 'Y032',
-  '青山': 'Y033', '原宿': 'Y033', '表参道': 'Y033',
-  '新宿': 'Y034',
-  '池袋': 'Y035',
-  '銀座': 'Y036',
-  '秋葉原': 'Y037',
-  '上野': 'Y038',
-  '品川': 'Y039',
+  '渋谷':   { lat: 35.6580, lng: 139.7016 },
+  '恵比寿': { lat: 35.6467, lng: 139.7100 },
+  '代官山': { lat: 35.6486, lng: 139.7030 },
+  '中目黒': { lat: 35.6441, lng: 139.6987 },
+  '六本木': { lat: 35.6627, lng: 139.7311 },
+  '麻布':   { lat: 35.6543, lng: 139.7375 },
+  '広尾':   { lat: 35.6509, lng: 139.7225 },
+  '赤坂':   { lat: 35.6726, lng: 139.7371 },
+  '青山':   { lat: 35.6654, lng: 139.7195 },
+  '原宿':   { lat: 35.6702, lng: 139.7027 },
+  '表参道': { lat: 35.6654, lng: 139.7121 },
+  '新宿':   { lat: 35.6896, lng: 139.7006 },
+  '池袋':   { lat: 35.7295, lng: 139.7109 },
+  '銀座':   { lat: 35.6717, lng: 139.7649 },
+  '秋葉原': { lat: 35.6984, lng: 139.7731 },
+  '上野':   { lat: 35.7141, lng: 139.7774 },
+  '品川':   { lat: 35.6284, lng: 139.7387 },
   // 神奈川
-  '横浜': 'Y061', '川崎': 'Y063',
+  '横浜':   { lat: 35.4437, lng: 139.6380 },
+  '川崎':   { lat: 35.5308, lng: 139.7030 },
   // 大阪
-  '梅田': 'Y091', '難波': 'Y092', '心斎橋': 'Y092', '天王寺': 'Y093',
+  '梅田':   { lat: 34.7024, lng: 135.4959 },
+  '難波':   { lat: 34.6628, lng: 135.5013 },
+  '心斎橋': { lat: 34.6738, lng: 135.5022 },
+  '天王寺': { lat: 34.6468, lng: 135.5140 },
   // 愛知
-  '名古屋': 'Y121', '栄': 'Y121',
+  '名古屋': { lat: 35.1709, lng: 136.8816 },
+  '栄':     { lat: 35.1686, lng: 136.9086 },
   // 福岡
-  '博多': 'Y151', '天神': 'Y151', '中洲': 'Y151',
+  '博多':   { lat: 33.5902, lng: 130.4207 },
+  '天神':   { lat: 33.5917, lng: 130.3987 },
+  '中洲':   { lat: 33.5920, lng: 130.4067 },
 }
 
 // Cuisine name → Hot Pepper genre code
@@ -87,18 +101,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const largeArea = PREF_TO_LARGE_AREA[prefecture] ?? 'Z011'
 
-  // エリア名をmiddle_areaコードにマップ（地理的絞り込み）
-  const middleAreaCodes = [...new Set(
-    (areas as string[]).map((a) => AREA_TO_MIDDLE[a]).filter(Boolean)
-  )]
-  // middle_areaコードに変換できなかったエリアはキーワードとして使用
-  const unmappedAreas = (areas as string[]).filter((a) => !AREA_TO_MIDDLE[a])
-
-  // Build keyword from unmapped areas + situation hints
-  const keywords: string[] = [
-    ...unmappedAreas,
-    ...situations.flatMap((s: string) => (SITUATION_KEYWORDS[s] ?? '').split(' ')).filter(Boolean),
-  ]
+  // 選ばれたエリアの最初の緯度経度
+  const latlng = (areas as string[]).map((a) => AREA_TO_LATLNG[a]).find(Boolean)
 
   // Pick first matching genre code, or leave empty for broader search
   const genreCodes = [...new Set(
@@ -109,30 +113,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const budgetCode = (budgets as string[]).length ? (BUDGET_TO_CODE[(budgets as string[])[0]] ?? '') : ''
   const isLunch = mealtime === 'ランチ'
 
-  // situation由来のキーワードのみ（エリア名はmiddle_areaに任せる）
   const situationKeywords = situations.flatMap(
     (s: string) => (SITUATION_KEYWORDS[s] ?? '').split(' ')
   ).filter(Boolean)
 
-  // large_areaフォールバック時のキーワード（エリア名も含む）
-  const fallbackKeywords = [...(areas as string[]), ...situationKeywords]
-
   const buildParams = (
     withBudget: boolean, withLunch: boolean, withKeyword: boolean, withGenre: boolean,
-    useMiddleArea = true
   ) => {
-    const kw = useMiddleArea ? situationKeywords : fallbackKeywords
     return new URLSearchParams({
       key: API_KEY,
       format: 'json',
-      count: '8',
-      ...(useMiddleArea && middleAreaCodes.length
-        ? { middle_area: middleAreaCodes[0] }
+      count: '20',
+      ...(latlng
+        ? { lat: String(latlng.lat), lng: String(latlng.lng), range: '3' }
         : { large_area: largeArea }),
       ...(withGenre && genreParam ? { genre: genreParam } : {}),
-      ...(withKeyword && kw.length ? { keyword: kw.join(' ') } : {}),
+      ...(withKeyword && situationKeywords.length ? { keyword: situationKeywords.join(' ') } : {}),
       ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
       ...(withLunch && isLunch ? { lunch: '1' } : {}),
+      order: '4',
     })
   }
 
@@ -152,17 +151,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (shops.length < 8 && isLunch) {
       shops = await tryFetch(buildParams(false, false, true, true))
     }
-    if (shops.length < 8 && keywords.length) {
+    if (shops.length < 8 && situationKeywords.length) {
       shops = await tryFetch(buildParams(false, false, false, true))
     }
     // ジャンルは絶対に外さない
-    // middle_areaコードが間違っている場合のフォールバック：large_area+keyword（ジャンル維持）
-    if (shops.length === 0 && middleAreaCodes.length) {
-      shops = await tryFetch(buildParams(false, false, true, true, false))
-      if (shops.length < 8) {
-        shops = await tryFetch(buildParams(false, false, false, true, false))
-      }
-    }
 
     const extractPrice = (avg: string | undefined): string => {
       if (!avg) return ''
