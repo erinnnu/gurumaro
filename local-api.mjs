@@ -29,37 +29,6 @@ const PREF_TO_LARGE_AREA = {
   '愛知県': 'Z051', '福岡県': 'Z061',
 }
 
-const AREA_TO_LATLNG = {
-  '渋谷':   { lat: 35.6580, lng: 139.7016 },
-  '恵比寿': { lat: 35.6467, lng: 139.7100 },
-  '代官山': { lat: 35.6486, lng: 139.7030 },
-  '中目黒': { lat: 35.6441, lng: 139.6987 },
-  '六本木': { lat: 35.6627, lng: 139.7311 },
-  '麻布':   { lat: 35.6543, lng: 139.7375 },
-  '広尾':   { lat: 35.6509, lng: 139.7225 },
-  '赤坂':   { lat: 35.6726, lng: 139.7371 },
-  '青山':   { lat: 35.6654, lng: 139.7195 },
-  '原宿':   { lat: 35.6702, lng: 139.7027 },
-  '表参道': { lat: 35.6654, lng: 139.7121 },
-  '新宿':   { lat: 35.6896, lng: 139.7006 },
-  '池袋':   { lat: 35.7295, lng: 139.7109 },
-  '銀座':   { lat: 35.6717, lng: 139.7649 },
-  '秋葉原': { lat: 35.6984, lng: 139.7731 },
-  '上野':   { lat: 35.7141, lng: 139.7774 },
-  '品川':   { lat: 35.6284, lng: 139.7387 },
-  '横浜':   { lat: 35.4437, lng: 139.6380 },
-  '川崎':   { lat: 35.5308, lng: 139.7030 },
-  '梅田':   { lat: 34.7024, lng: 135.4959 },
-  '難波':   { lat: 34.6628, lng: 135.5013 },
-  '心斎橋': { lat: 34.6738, lng: 135.5022 },
-  '天王寺': { lat: 34.6468, lng: 135.5140 },
-  '名古屋': { lat: 35.1709, lng: 136.8816 },
-  '栄':     { lat: 35.1686, lng: 136.9086 },
-  '博多':   { lat: 33.5902, lng: 130.4207 },
-  '天神':   { lat: 33.5917, lng: 130.3987 },
-  '中洲':   { lat: 33.5920, lng: 130.4067 },
-}
-
 const CUISINE_TO_GENRE = {
   'イタリアン・フレンチ': 'G006', '和食': 'G004',
   '中華': 'G007', '韓国料理': 'G017', 'カフェ': 'G014',
@@ -96,7 +65,6 @@ const server = http.createServer(async (req, res) => {
       const { cuisines = [], situations = [], prefecture = '東京都', areas = [], mealtime = '', budgets = [] } = JSON.parse(body || '{}')
 
       const largeArea = PREF_TO_LARGE_AREA[prefecture] ?? 'Z011'
-      const latlng = areas.map(a => AREA_TO_LATLNG[a]).find(Boolean)
       const situationKeywords = situations.flatMap(s => (SITUATION_KEYWORDS[s] ?? '').split(' ')).filter(Boolean)
 
       const genreCodes = [...new Set(cuisines.map(c => CUISINE_TO_GENRE[c]).filter(Boolean))]
@@ -104,17 +72,20 @@ const server = http.createServer(async (req, res) => {
       const budgetCode = budgets.length ? (BUDGET_TO_CODE[budgets[0]] ?? '') : ''
       const isLunch = mealtime === 'ランチ'
 
-      const buildParams = ({ withBudget, withLunch, withKeyword = true, withGenre = true }) => {
+      const buildParams = ({ withBudget, withLunch, withSituationKeyword = true, withGenre = true }) => {
+        const allKeywords = [
+          ...areas,
+          ...(withSituationKeyword ? situationKeywords : []),
+        ].filter(Boolean)
         return new URLSearchParams({
           key: API_KEY,
           format: 'json',
           count: '20',
-          ...(latlng ? { lat: String(latlng.lat), lng: String(latlng.lng), range: '3' } : { large_area: largeArea }),
+          large_area: largeArea,
           ...(withGenre && genreParam ? { genre: genreParam } : {}),
-          ...(withKeyword && situationKeywords.length ? { keyword: situationKeywords.join(' ') } : {}),
+          ...(allKeywords.length ? { keyword: allKeywords.join(' ') } : {}),
           ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
           ...(withLunch && isLunch ? { lunch: '1' } : {}),
-          order: '4',
         })
       }
 
@@ -138,10 +109,10 @@ const server = http.createServer(async (req, res) => {
         console.log(`[API] Without lunch filter: ${shops.length} shops`)
       }
       if (shops.length < 8 && situationKeywords.length) {
-        shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withKeyword: false }))
-        console.log(`[API] Without keyword: ${shops.length} shops`)
+        shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withSituationKeyword: false }))
+        console.log(`[API] Without situation keyword: ${shops.length} shops`)
       }
-      // ジャンルは絶対に外さない
+      // ジャンルもエリアkeywordも絶対外さない
 
       const extractPrice = (avg) => {
         if (!avg) return ''
