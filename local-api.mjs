@@ -48,6 +48,33 @@ const BUDGET_TO_CODE = {
   'ちょっと贅沢 (¥5,000〜¥8,000)': 'B008', '特別な日 (¥8,000〜)': 'B004',
 }
 
+async function resolveSmallAreaCodes(apiKey, areaNames) {
+  if (areaNames.length === 0) return []
+  const codes = []
+  for (const name of areaNames) {
+    const url = `https://webservice.recruit.co.jp/hotpepper/small_area/v1/?key=${apiKey}&keyword=${encodeURIComponent(name)}&format=json`
+    try {
+      const r = await fetch(url)
+      if (!r.ok) continue
+      const d = await r.json()
+      const areas = d?.results?.small_area ?? []
+      for (const area of areas) {
+        if (area.code) codes.push(area.code)
+      }
+    } catch { /* 失敗しても続行 */ }
+  }
+  return [...new Set(codes)].slice(0, 5)
+}
+
+function shuffle(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -72,47 +99,47 @@ const server = http.createServer(async (req, res) => {
       const budgetCode = budgets.length ? (BUDGET_TO_CODE[budgets[0]] ?? '') : ''
       const isLunch = mealtime === 'ランチ'
 
-      const buildParams = ({ withBudget, withLunch, withSituationKeyword = true, withGenre = true }) => {
-        const allKeywords = [
-          ...areas,
-          ...(withSituationKeyword ? situationKeywords : []),
-        ].filter(Boolean)
-        return new URLSearchParams({
-          key: API_KEY,
-          format: 'json',
-          count: '20',
-          large_area: largeArea,
-          ...(withGenre && genreParam ? { genre: genreParam } : {}),
-          ...(allKeywords.length ? { keyword: allKeywords.join(' ') } : {}),
-          ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
-          ...(withLunch && isLunch ? { lunch: '1' } : {}),
-        })
+      const smallAreaCodes = await resolveSmallAreaCodes(API_KEY, areas)
+      console.log(`[API] small_area codes: ${smallAreaCodes.join(', ') || 'none'}`)
+
+      const buildQueryString = ({ withBudget, withLunch, withKeyword = true, withGenre = true }) => {
+        const params = [`key=${API_KEY}`, `format=json`, `count=50`]
+        if (smallAreaCodes.length > 0) {
+          smallAreaCodes.forEach(code => params.push(`small_area=${code}`))
+        } else {
+          params.push(`large_area=${largeArea}`)
+        }
+        if (withGenre && genreParam) params.push(`genre=${genreParam}`)
+        if (withKeyword && situationKeywords.length) params.push(`keyword=${encodeURIComponent(situationKeywords.join(' '))}`)
+        if (withBudget && budgetCode) params.push(`budget=${budgetCode}`)
+        if (withLunch && isLunch) params.push(`lunch=1`)
+        return params.join('&')
       }
 
-      const tryFetch = async (params) => {
-        const url = `${BASE_URL}?${params}`
+      const tryFetch = async (queryString) => {
+        const url = `${BASE_URL}?${queryString}`
         console.log(`[API] Fetching: ${url}`)
         const r = await fetch(url)
         const d = await r.json()
         return d?.results?.shop ?? []
       }
 
-      let shops = await tryFetch(buildParams({ withBudget: true, withLunch: true }))
+      let shops = await tryFetch(buildQueryString({ withBudget: true, withLunch: true }))
       console.log(`[API] Full filter: ${shops.length} shops`)
 
       if (shops.length < 8 && budgetCode) {
-        shops = await tryFetch(buildParams({ withBudget: false, withLunch: true }))
+        shops = await tryFetch(buildQueryString({ withBudget: false, withLunch: true }))
         console.log(`[API] Without budget: ${shops.length} shops`)
       }
       if (shops.length < 8 && isLunch) {
-        shops = await tryFetch(buildParams({ withBudget: false, withLunch: false }))
+        shops = await tryFetch(buildQueryString({ withBudget: false, withLunch: false }))
         console.log(`[API] Without lunch filter: ${shops.length} shops`)
       }
       if (shops.length < 8 && situationKeywords.length) {
-        shops = await tryFetch(buildParams({ withBudget: false, withLunch: false, withSituationKeyword: false }))
+        shops = await tryFetch(buildQueryString({ withBudget: false, withLunch: false, withKeyword: false }))
         console.log(`[API] Without situation keyword: ${shops.length} shops`)
       }
-      // ジャンルもエリアkeywordも絶対外さない
+      // ジャンルも small_area も絶対外さない
 
       const extractPrice = (avg) => {
         if (!avg) return ''
@@ -140,8 +167,9 @@ const server = http.createServer(async (req, res) => {
         }
       })
 
+      const result = shuffle(restaurants).slice(0, 20)
       res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end(JSON.stringify({ restaurants }))
+      res.end(JSON.stringify({ restaurants: result }))
     } catch (e) {
       console.error('[API] Error:', e.message)
       res.writeHead(500, { 'Content-Type': 'application/json' })

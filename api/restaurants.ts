@@ -51,6 +51,35 @@ const SITUATION_KEYWORDS: Record<string, string> = {
   '満腹になりたい！':     '食べ放題',
 }
 
+// エリア名 → small_area コードを動的解決
+async function resolveSmallAreaCodes(apiKey: string, areaNames: string[]): Promise<string[]> {
+  if (areaNames.length === 0) return []
+  const codes: string[] = []
+  for (const name of areaNames) {
+    const url = `https://webservice.recruit.co.jp/hotpepper/small_area/v1/?key=${apiKey}&keyword=${encodeURIComponent(name)}&format=json`
+    try {
+      const res = await fetch(url)
+      if (!res.ok) continue
+      const data = await res.json()
+      const areas = data?.results?.small_area ?? []
+      for (const area of areas) {
+        if (area.code) codes.push(area.code)
+      }
+    } catch { /* 失敗しても続行 */ }
+  }
+  return [...new Set(codes)].slice(0, 5) // APIは5個まで
+}
+
+// Fisher-Yates シャッフル
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -64,7 +93,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const largeArea = PREF_TO_LARGE_AREA[prefecture] ?? 'Z011'
 
-  // Pick first matching genre code, or leave empty for broader search
   const genreCodes = [...new Set(
     (cuisines as string[]).map((c) => CUISINE_TO_GENRE[c]).filter(Boolean)
   )]
@@ -77,29 +105,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     (s: string) => (SITUATION_KEYWORDS[s] ?? '').split(' ')
   ).filter(Boolean)
 
-  const buildParams = (
-    withBudget: boolean, withLunch: boolean, withSituationKeyword: boolean, withGenre: boolean,
-  ) => {
-    const areaKeywords = areas as string[]
-    const allKeywords = [
-      ...areaKeywords,
-      ...(withSituationKeyword ? situationKeywords : []),
-    ].filter(Boolean)
+  const smallAreaCodes = await resolveSmallAreaCodes(API_KEY, areas as string[])
 
-    return new URLSearchParams({
-      key: API_KEY,
-      format: 'json',
-      count: '20',
-      large_area: largeArea,
-      ...(withGenre && genreParam ? { genre: genreParam } : {}),
-      ...(allKeywords.length ? { keyword: allKeywords.join(' ') } : {}),
-      ...(withBudget && budgetCode ? { budget: budgetCode } : {}),
-      ...(withLunch && isLunch ? { lunch: '1' } : {}),
-    })
+  const buildQueryString = (
+    withBudget: boolean, withLunch: boolean, withKeyword: boolean, withGenre: boolean,
+  ): string => {
+    const params: string[] = [
+      `key=${API_KEY}`,
+      `format=json`,
+      `count=50`,
+    ]
+    if (smallAreaCodes.length > 0) {
+      smallAreaCodes.forEach((code) => params.push(`small_area=${code}`))
+    } else {
+      params.push(`large_area=${largeArea}`)
+    }
+    if (withGenre && genreParam) params.push(`genre=${genreParam}`)
+    if (withKeyword && situationKeywords.length) params.push(`keyword=${encodeURIComponent(situationKeywords.join(' '))}`)
+    if (withBudget && budgetCode) params.push(`budget=${budgetCode}`)
+    if (withLunch && isLunch) params.push(`lunch=1`)
+    return params.join('&')
   }
 
-  const tryFetch = async (params: URLSearchParams) => {
-    const apiRes = await fetch(`${BASE_URL}?${params.toString()}`)
+  const tryFetch = async (queryString: string) => {
+    const apiRes = await fetch(`${BASE_URL}?${queryString}`)
     if (!apiRes.ok) throw new Error(`Hot Pepper API error: ${apiRes.status}`)
     const data = await apiRes.json()
     return (data?.results?.shop ?? []) as Record<string, unknown>[]
@@ -107,17 +136,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // 段階的に条件を緩めながら最低8件を目指す
-    let shops = await tryFetch(buildParams(true, true, true, true))
+    let shops = await tryFetch(buildQueryString(true, true, true, true))
     if (shops.length < 8 && budgetCode) {
-      shops = await tryFetch(buildParams(false, true, true, true))
+      shops = await tryFetch(buildQueryString(false, true, true, true))
     }
     if (shops.length < 8 && isLunch) {
-      shops = await tryFetch(buildParams(false, false, true, true))
+      shops = await tryFetch(buildQueryString(false, false, true, true))
     }
     if (shops.length < 8 && situationKeywords.length) {
-      shops = await tryFetch(buildParams(false, false, false, true))
+      shops = await tryFetch(buildQueryString(false, false, false, true))
     }
-    // ジャンルもエリアkeywordも絶対外さない
+    // ジャンルも small_area も絶対外さない
 
     const extractPrice = (avg: string | undefined): string => {
       if (!avg) return ''
@@ -154,8 +183,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     })
 
+    // シャッフルして毎回違う店を表示、先頭20件を返す
+    const result = shuffle(restaurants).slice(0, 20)
+
     res.setHeader('Cache-Control', 'no-store')
-    return res.status(200).json({ restaurants })
+    return res.status(200).json({ restaurants: result })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
     return res.status(500).json({ error: msg })
