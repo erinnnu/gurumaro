@@ -23,11 +23,9 @@ export function buildHotpepperUrl(restaurantUrl: string): string {
  */
 function cleanName(name: string): string {
   return name
-    .replace(/【[^】]*】/g, '')                    // 【...】を除去
-    .replace(/（[^）]*）/g, '')                    // （...）を除去
-    .replace(/\([^)]*\)/g, '')                    // (...)を除去
-    .replace(/\s*[\u2500-\u257F\-ー]+.*/g, '')    // ダッシュ以降を除去
-    .replace(/\s+[^\s]*[店舗號号](\s|$)/g, ' ')   // 「○○店」「○○號」を除去
+    .replace(/【[^】]*】/g, '')   // 【...】を除去
+    .replace(/（[^）]*）/g, '')   // （...）を除去
+    .replace(/\([^)]*\)/g, '')   // (...)を除去
     .replace(/\s+/g, ' ')
     .trim()
 }
